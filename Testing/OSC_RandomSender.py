@@ -1,0 +1,45 @@
+"""
+Small example OSC client
+"""
+import random
+import time
+
+from pythonosc import udp_client
+
+LeashNameString = "Leash"
+PORT = 9001
+IP = "127.0.0.1"
+
+def sendData():
+  
+  LeashZPos = random.random()
+  LeashZNeg = random.random()*-1
+  LeashXPos = random.random()
+  LeashXNeg = random.random()*-1
+  LeashYPos = random.random()
+  LeashYNeg = random.random()*-1
+
+  #IsGrabbedState = bool(random.getrandbits(1))
+  IsGrabbedState = True
+  #StretchValue = random.random()
+  StretchValue = 1
+
+  print(f"Sending {LeashNameString} information:\n\tGrabbed: {IsGrabbedState}\n\tStretch: {StretchValue}\n\tZ+: {LeashZPos}\n\tZ-: {LeashZNeg}\n\tX+: {LeashXPos}\n\tX-: {LeashXNeg}\n\tY-: {LeashYPos}\n\tY-: {LeashYNeg}")
+
+  client.send_message("/avatar/parameters/Leash_Z+", LeashZPos)
+  client.send_message("/avatar/parameters/Leash_Z-", LeashZNeg)
+  client.send_message("/avatar/parameters/Leash_X+", LeashXPos)
+  client.send_message("/avatar/parameters/Leash_X-", LeashXNeg)
+  client.send_message("/avatar/parameters/Leash_Y+", LeashXPos)
+  client.send_message("/avatar/parameters/Leash_Y-", LeashXNeg)
+  client.send_message(f"/avatar/parameters/{LeashNameString}_Stretch", StretchValue)
+  client.send_message(f"/avatar/parameters/{LeashNameString}_IsGrabbed", IsGrabbedState)
+
+  time.sleep(2)
+
+if __name__ == "__main__":
+
+  client = udp_client.SimpleUDPClient(IP, PORT)
+
+  for x in range(10000):
+    sendData()

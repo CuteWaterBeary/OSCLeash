@@ -37,6 +37,20 @@ class Program:
         #Movement Math
         VerticalOutput = self.clamp((leash.Z_Positive - leash.Z_Negative) * leash.Stretch * leash.settings.StrengthMultiplier)
         HorizontalOutput = self.clamp((leash.X_Positive - leash.X_Negative) * leash.Stretch * leash.settings.StrengthMultiplier)
+        
+        #Lifting Math
+        if leash.settings.PickupEnabled:
+            ElevationOutput = self.clamp((leash.Y_Positive - leash.Y_Negative) * leash.Stretch * leash.settings.StrengthMultiplier)
+
+            if leash.settings.PickupCompensation and leash.Y_Positive > leash.settings.PickupDeadzone:
+                VerticalOutput = VerticalOutput * (ElevationOutput+1)
+                HorizontalOutput = VerticalOutput * (ElevationOutput+1)
+                ElevationOutput = 0
+
+        else: 
+            ElevationOutput = 0.0 
+
+
 
         #Turning Math
         if leash.settings.TurningEnabled and leash.Stretch > leash.settings.TurningDeadzone:
@@ -89,11 +103,11 @@ class Program:
                 print("{} is grabbed".format(leash.Name))
 
             if leash.Stretch > leash.settings.RunDeadzone: #Running deadzone
-                self.leashOutput(VerticalOutput, HorizontalOutput, TurningSpeed, 1, leash.settings)
+                self.leashOutput(VerticalOutput, HorizontalOutput, ElevationOutput, TurningSpeed, 1, leash.settings)
             elif leash.Stretch > leash.settings.WalkDeadzone: #Walking deadzone
-                self.leashOutput(VerticalOutput, HorizontalOutput, TurningSpeed, 0, leash.settings)
+                self.leashOutput(VerticalOutput, HorizontalOutput, ElevationOutput, TurningSpeed, 0, leash.settings)
             else: #Not stretched enough to move.
-                self.leashOutput(0.0, 0.0, 0.0, 0, leash.settings)
+                self.leashOutput(0.0, 0.0, 0.0, 0.0, 0, leash.settings)
             
             time.sleep(leash.settings.ActiveDelay)
             Thread(target=self.leashRun, args=(leash, counter+1)).start()# Run thread if still grabbed
@@ -102,7 +116,7 @@ class Program:
             print("{} has been released".format(leash.Name))
             leash.Active = False
             leash.resetMovement()
-            self.leashOutput(0.0, 0.0, 0.0, 0, leash.settings)
+            self.leashOutput(0.0, 0.0, 0.0, 0.0, 0, leash.settings)
 
             leash.wasGrabbed = False
 
@@ -114,14 +128,14 @@ class Program:
             print("Waiting...")
 
             leash.Active = False
-            self.leashOutput(0.0, 0.0, 0, 0, leash.settings)
+            self.leashOutput(0.0, 0.0, 0.0, 0.0, 0, leash.settings)
             self.resetProgram()
 
             time.sleep(leash.settings.InactiveDelay)
 
         statelock.release()
 
-    def leashOutput(self, vert: float, hori: float, turn: float, runType: bool, settings: ConfigSettings):
+    def leashOutput(self, vert: float, hori: float, lift: float, turn: float, runType: bool, settings: ConfigSettings):
 
         oscClient = SimpleUDPClient(settings.IP, settings.SendingPort)
 
@@ -142,12 +156,18 @@ class Program:
             print("\nSending through oscClient\n")
             oscClient.send_message("/input/Vertical", vert)
             oscClient.send_message("/input/Horizontal", hori)
+            
+            if settings.PickupEnabled:
+                oscClient.send_message(f'/avatar/parameters/{settings.Pickup_Param}',lift)
+            
             if settings.TurningEnabled: 
                 oscClient.send_message("/input/LookHorizontal", turn)
+
             oscClient.send_message("/input/Run", runType)
 
 
         print(f"\tVertical: {vert}\n\tHorizontal: {hori}\n\tRun: {runType}")
+        if settings.PickupEnabled: print (f"\tLift: {lift}")
         if settings.TurningEnabled: print(f"\tTurn: {turn}")
 
     def clamp (self, n):

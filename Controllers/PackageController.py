@@ -36,6 +36,9 @@ class Package:
         self.__dispatcher.map(f'/avatar/parameters/{leash.Z_Negative_ParamName}',self.__updateZ_Negative) #Z Negative
         self.__dispatcher.map(f'/avatar/parameters/{leash.X_Positive_ParamName}',self.__updateX_Positive) #X Positive
         self.__dispatcher.map(f'/avatar/parameters/{leash.X_Negative_ParamName}',self.__updateX_Negative) #X Negative
+        self.__dispatcher.map(f'/avatar/parameters/{leash.X_Positive_ParamName}',self.__updateY_Positive) #X Positive
+        self.__dispatcher.map(f'/avatar/parameters/{leash.X_Negative_ParamName}',self.__updateY_Negative) #X Negative
+
 
     def __updateZ_Positive(self, addr, value):
         try:
@@ -72,6 +75,26 @@ class Package:
             for leash in self.leashes:
                 self.__statelock.acquire()
                 leash.X_Negative = value
+                self.__statelock.release()
+        except Exception as e:
+            print(e)
+            time.sleep(5)
+
+    def __updateY_Positive(self, addr, value):
+        try:
+            for leash in self.leashes:
+                self.__statelock.acquire()
+                leash.Y_Positive = value
+                self.__statelock.release()
+        except Exception as e:
+            print(e)
+            time.sleep(5)
+
+    def __updateY_Negative(self, addr, value):
+        try:
+            for leash in self.leashes:
+                self.__statelock.acquire()
+                leash.Y_Negative = value
                 self.__statelock.release()
         except Exception as e:
             print(e)
@@ -118,4 +141,4 @@ class Package:
             print('\x1b[1;31;40m' + '   Warning: An application might already be running on this port!   ' + '\x1b[0m')
             print('\x1b[1;31;41m' + '                                                                    \n' + '\x1b[0m')
             print(e)
-            # No delay here as error message is displayed somewhere else when this fails
+            # No delay here as the delay in the calling function will keep it visible long enough.
