@@ -44,7 +44,6 @@ For setup questions/support feel free to shoot me a DM or ask in #OSC-Talkin in 
 
 As with RavenBuilds's take on the OSCLeash, using OSC as an input for movement causes your arms to be locked into desktop pose, please slap some support onto [this canny](https://feedback.vrchat.com/feature-requests/p/osc-locks-arms)! 
 
-
 **TEMPORARY WORKAROUND**: Set "XboxJoystickMovement" to true in the config file. Instead of outputting movement with OSC, this will emulate an Xbox controller joystick! Skipping over the above issue entirely. This will probably be removed when VRC fixes the issue.<u> Check the extra steps in setup for this. <br/></u>
 
 <br/>
@@ -56,27 +55,40 @@ As with RavenBuilds's take on the OSCLeash, using OSC as an input for movement c
 
 <br/>
 
-
 # Config
 
-| Value                 | Info                                                           | Default     |
-|:--------------------- | -------------------------------------------------------------- |:-----------:|
-| IP                    | Address to send OSC data to                                    | 127.0.0.1   |
-| ListeningPort         | Port to listen for OSC data on                                 | 9001        |
-| Sending port          | Port to send OSC data to                                       | 9000        |
-| RunDeadzone           | Stretch value above this will cause running                    | 0.70        |
-| WalkDeadzone          | Stretch value above this will cause walking                    | 0.15        |
-| StrengthMultiplier    | Multiplies speed values but they can't go above (1.0)          | 1.2         |
-| TurningEnabled        | Enable turning functionality                                   | false       |
-| TurningMultiplier     | Adjust turning speed                                           | 0.75        |
-| TurningDeadzone       | Stretch value above this will begin turning                    | .15         |
-| TurningGoal           | Goal degree range for turning. (0° to 144°)                    | 90°         |
-| ActiveDelay           | Delay between OSC messages while the leash is being grabbed.   | 0.1 seconds |
-| InactiveDelay         | Delay between non-essential OSC messages                       | 0.5 seconds |
-| Logging               | Logging for Directional compass inputs                         | false       |
-| XboxJoystickMovement  | Esoteric workaround for VRC breaking animations upon OSC input | false       |
-| PhysboneParameters    | A list of Physbones to use as leashes                          | see below   |
-| DirectionalParameters | A dictionary of contacts to use for direction calculation      | see below   |
+| Value                 | Info                                                                      | Default   |
+|:--------------------- | ------------------------------------------------------------------------- |:---------:|
+| IP                    | Address to send OSC data to                                               | 127.0.0.1 |
+| ListeningPort         | Port to listen for OSC data on                                            | 9001      |
+| Sending port          | Port to send OSC data to                                                  | 9000      |
+|                       |                                                                           |           |
+| Logging               | Logging values in the terminal                                            | true      |
+| GUIEnabled            | Troggles the GUI visibility                                               | True      |
+| GUITheme              | Theme for the small UI box, try "random"                                  | blank     |
+| StartWithSteamVR      | Starts the app when SteamVR starts                                        | false     |
+|                       |                                                                           |           |
+| ActiveDelay           | Delay between OSC messages while the leash is being grabbed. (In seconds) | 0.05      |
+| InactiveDelay         | Delay between non-essential OSC messages (In seconds)                     | 0.5       |
+|                       |                                                                           |           |
+| RunDeadzone           | Stretch value above this will cause running                               | 0.70      |
+| WalkDeadzone          | Stretch value above this will cause walking                               | 0.15      |
+| StrengthMultiplier    | Multiplies speed values but they can't go above (1.0)                     | 1.2       |
+|                       |                                                                           |           |
+| TurningEnabled        | Enable turning functionality                                              | false     |
+| TurningMultiplier     | Adjust turning speed                                                      | 0.75      |
+| TurningDeadzone       | Stretch value above this will begin turning                               | 0.15      |
+| TurningGoal           | Goal degree range for turning. (0° to 144°)                               | 90        |
+| TurningKp             |                                                                           | 0.5       |
+|                       |                                                                           |           |
+| XboxJoystickMovement  | Esoteric workaround for VRC breaking animations upon OSC input            | false     |
+| BringGameToFront      | Focuses the selected window so Xinput works correctly                     | false     |
+| GameTitle             | The name of the window                                                    | VRChat    |
+|                       |                                                                           |           |
+| PhysboneParameters    | A list of Physbones to use as leashes                                     | see below |
+| DirectionalParameters | A dictionary of contacts to use for direction calculation                 | see below |
+| DisableParameter      | Parameter that will pause the program                                     | blank     |
+|                       |                                                                           |           |
 
 ᴹᵃⁿ ᵗʰᵉʳᵉ'ˢ ᵃ ˡᵒᵗ ᵒᶠ ˢᵉᵗᵗᶦⁿᵍˢ
 
@@ -100,13 +112,15 @@ The script will automatically read from the _IsGrabbed and _Stretch parameters c
 <br/>
 
 ---
+
 ### Multiple Leashes
 
 I wouldn't reccomend attempting this at the moment unless you understand constraints and animations. <br/>
- - Depending on which is grabbed, you'll need to animate two position constraints. 
-   - We only care about which one was grabbed first. 
- - The Source of `Aim Target` should alernate the ends of the leashes
- - The source of a psotion constraint on the OSCLeash Prefab should move between the origins of the leashes.
+
+- Depending on which is grabbed, you'll need to animate two position constraints. 
+  - We only care about which one was grabbed first. 
+- The Source of `Aim Target` should alernate the ends of the leashes
+- The source of a psotion constraint on the OSCLeash Prefab should move between the origins of the leashes.
 
 This will be included in a setup video eventually. <br/>
 
@@ -173,31 +187,51 @@ If you wish to change the contacts to used for direction calculations, you can d
         "IP": "127.0.0.1",
         "ListeningPort": 9001,
         "SendingPort": 9000,
+
+        "Logging": true,
+        "GUIEnabled": true,
+        "GUITheme": "",
+        "StartWithSteamVR": false,
+
+        "ActiveDelay": 0.05,
+        "InactiveDelay": 0.5,
+
         "RunDeadzone": 0.70,
         "WalkDeadzone": 0.15,
         "StrengthMultiplier": 1.2,
+
         "TurningEnabled": false,
         "TurningMultiplier": 0.75,
         "TurningDeadzone": 0.15,
         "TurningGoal": 90,
-        "ActiveDelay": 0.01,
-        "InactiveDelay": 0.5,
-        "Logging": false,
-        "XboxJoystickMovement": false,
-        
+        "TurningKp": 0.5,
+
+        "XboxJoystickMovement": true,
+        "BringGameToFront": false,
+        "GameTitle": "VRChat",
+
         "PhysboneParameters":
         [
                 "Leash"
         ],
+
         "DirectionalParameters":
         {
                 "Z_Positive_Param": "Leash_Z+",
                 "Z_Negative_Param": "Leash_Z-",
                 "X_Positive_Param": "Leash_X+",
                 "X_Negative_Param": "Leash_X-"
-        }
+        },
+
+        "DisableParameter": "",
+
+        "ScaleSlowdownEnabled": true,
+        "ScaleParameter": "Go/ScaleFloat",
+        "ScaleDefault": 0.25
 }
+
 ```
+
 ---
 
 ## How does this work??
@@ -250,6 +284,7 @@ If the values are below the deadzones or _IsGrabbed is false, send 0s for the OS
 
 # Credits
 
+- @Nullstalgia & @Spectrshiv are responsible for the rewrite of v3
 - @ALeonic is responsible for a majority of v2
 - @FrostbyteVR babied me through 90% of the process of making v1
 - @I5UCC I stared at the code of their ThumbParamsOSC tool for a long time.
