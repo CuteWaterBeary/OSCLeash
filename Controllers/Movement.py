@@ -1,5 +1,9 @@
 import math
 import time
+from colorama import Fore
+from functools import wraps
+from Throttle import ThrottleDecorator
+
 
 DIRECTION_VECTORS = {'North': (0, 0, 1),
                      'South': (0, 0, -1),
@@ -14,6 +18,7 @@ class MovementController:
         self.gui_queue = gui_queue
         self.gamepad = None
         self.runButton = None
+
         
     def setup_xbox_movement(self):
         # Add controller input if user installs and enables vgamepad
@@ -23,7 +28,7 @@ class MovementController:
                 self.gamepad = vg.VX360Gamepad()
                 self.runButton = vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER
             except Exception as e:
-                print('\x1b[1;31;40m' + f'Error: {e}\nWarning: Switching to default OSC settings. Please wait...\n Check documentation for controller emulator tool.' + '\x1b[0m')
+                print(Fore.RED + f'Error: {e}\nWarning: Switching to default OSC settings. Please wait...\n Check documentation for controller emulator tool.' + Fore.RESET)
                 time.sleep(1)
                 self.config['XboxJoystickMovement'] = False
                 
@@ -43,7 +48,7 @@ class MovementController:
             else:
                 self.gamepad.release_button(button=self.runButton)
             self.gamepad.update()
-            # time.sleep(0.01)
+            #time.sleep(0.01)
 
         else:
             #Normal OSC outputs  function                    
@@ -66,23 +71,32 @@ class MovementController:
             leashCardinal = 'North'
         return self.proportionalTurn(leashData['vector'], self.config['TurningKp'], leashCardinal)
     
+    def throttle(func, delay):
+        def decorator(func):
+            decorator = ThrottleDecorator(func, delay)
+            return wraps(func)(decorator)
+        return decorator
+
     def sendMovement(self):
-        if not self.in_queue.empty():
-            queueData = self.in_queue.get(block=False)
-            leashData = queueData['LeashActions']
-            if self.config['TurningEnabled']:
-                turn = self.calculateTurn(leashData)
-            else:
-                turn = 0.0
-            leashData['turn'] = turn
-            if leashData['stretch'] > self.config['WalkDeadzone']:
-                pass
-            else:
-                leashData['vector'] = [0.0,0.0,0.0]
-            
-            self.gui_queue.put(leashData, block=False)
-            return self.makeMovement(leashData)
-    
+        @self.throttle(self.config['ActiveDelay'])
+        def _sendMovement(self):
+            if not self.in_queue.empty():
+                queueData = self.in_queue.get(block=False)
+                leashData = queueData['LeashActions']
+                if self.config['TurningEnabled']:
+                    turn = self.calculateTurn(leashData)
+                else:
+                    turn = 0.0
+                leashData['turn'] = turn
+                if leashData['stretch'] > self.config['WalkDeadzone']:
+                    pass
+                else:
+                    leashData['vector'] = [0.0,0.0,0.0]
+                
+                self.gui_queue.put(leashData, block=False)
+                return self.makeMovement(leashData)
+        return _sendMovement(self)
+        
     @staticmethod
     def proportionalTurn(current_vector, kp=1, direction='North'):
         target_direction = DIRECTION_VECTORS[direction]

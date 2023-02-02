@@ -5,12 +5,14 @@ from Controllers.Leash import LeashActions
 from Controllers.Movement import MovementController
 from Controllers.Bootstrap import bootstrap, printInfo
 import PySimpleGUI as sg
-from multiprocessing import Queue
+from queue import LifoQueue as Queue
 import asyncio
 import darkdetect
 import time
 import os
-
+from colorama import init, Fore
+import socket
+init() # Initialize colorama
 config = bootstrap()
 leashCollection = [x for x in config["PhysboneParameters"]]
 printInfo(config)
@@ -22,16 +24,16 @@ def dispatcherMap(dispatcher: Dispatcher, actions: LeashActions):
 
     for v in config['DirectionalParameters'].values():
         dispatcher.map(f'/avatar/parameters/{v}', actions.updateDirectional)
-    
+
     dispatcher.map(f'/avatar/parameters/{config["ScaleParameter"]}', actions.updateScale)
     dispatcher.map(f'/avatar/parameters/{config["DisableParameter"]}', actions.updateDisable)
     dispatcher.map(f'/avatar/change', actions.updateScale)
 
-       
-class App():            
+
+class App():
     def __init__(self):
         if config["GUITheme"] != "":
-            sg.theme(config["GUITheme"])  
+            sg.theme(config["GUITheme"])
         else:
             if darkdetect.isDark():
                 sg.theme('DarkPurple5')   # Add a touch of color
@@ -46,13 +48,13 @@ class App():
                     [sg.Text('Leash Turn:'), (sg.Text('Null', key='leash-turn'))],
                     [sg.Text('Current Scale:'), (sg.Text('Null', key='current-scale'))],]
 
-                            
+
         # Create the Window
         self.window = sg.Window('OSCLeash - GUI', self.mainLayout, enable_close_attempted_event=True)
-        
+
         # Event Loop to process "events" and get the "values" of the inputs
-    
-    async def run(self, in_q: Queue, out_q: Queue):    
+
+    async def run(self, in_q: Queue, out_q: Queue):
         self.window.finalize()
         self.window.set_min_size((250, 100))
         while True:
@@ -74,9 +76,20 @@ class App():
                 self.window['current-scale'].update(str(round(values['scale']/config['ScaleDefault']*100))+"%")
             await asyncio.sleep(0)
 
+# Thanks again, ChatGPT!
+def checkBindable(host, port, timeout=5.0):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(timeout)
+    try:
+        sock.bind((host, port))
+        sock.close()
+        return True
+    except:
+        return False
+
 
 async def init_main(in_q: Queue, out_q: Queue, gui_q: Queue):
-    # Start OSC System    
+    # Start OSC System
     dispatcher = Dispatcher()
 
     #Make sure a threading application isnt running on the port already.
@@ -93,7 +106,11 @@ async def init_main(in_q: Queue, out_q: Queue, gui_q: Queue):
     #     raise SystemExit
 
     server = AsyncIOOSCUDPServer((config['IP'], config['ListeningPort']), dispatcher, asyncio.get_event_loop())
-    transport, protocol = await server.create_serve_endpoint()  # Create datagram endpoint and start serving
+    if not checkBindable(config['IP'], config['ListeningPort']):
+        print(Fore.RED + "Failed to bind to port, is another instance of OSCLeash running?", Fore.RESET)
+        raise SystemExit
+
+    transport, protocol = await asyncio.wait_for(server.create_serve_endpoint(), 5)  # Create datagram endpoint and start serving
     client = SimpleUDPClient(config['IP'], config['SendingPort'])
 
     actions = LeashActions(config, in_q, out_q)
@@ -107,9 +124,9 @@ async def init_main(in_q: Queue, out_q: Queue, gui_q: Queue):
         if config['Logging'] and ['GUIEnabled']:
             if not gui_q.empty():
                 print(gui_q.get(block=False))
-                
+
         bundle = movement.sendMovement()
-        if bundle is not None: 
+        if bundle is not None:
             for msg in bundle:
                 client.send_message(msg[0], msg[1])
         await asyncio.sleep(config['ActiveDelay'])
@@ -130,7 +147,7 @@ if __name__ == "__main__":
             guiLogic = asyncio.ensure_future(gui.run(gui_q, in_q))
         asyncio.get_event_loop().run_forever()
 
-    except KeyboardInterrupt as e:
+    except Exception as e:
         if config['Logging']:
             print(e)
         try:

@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from colorama import Fore
 
 # Default configs in case the user doesn't have one
 
@@ -14,7 +15,7 @@ DefaultConfig = {
         "GUITheme": "",
         "StartWithSteamVR": False,
 
-        "ActiveDelay": 0.05,     
+        "ActiveDelay": 0.05,
         "InactiveDelay": 0.5,
 
         "RunDeadzone": 0.70,
@@ -80,7 +81,7 @@ def setup_openvr():
         # Save AppManifest to manifest.vrmanifest
         with open("./manifest.vrmanifest", "w") as f:
             f.write(json.dumps(AppManifest))
-        
+
         # Register the manifest file's absolute path with SteamVR
         manifest_path = os.path.abspath("./manifest.vrmanifest")
         error = openvr.EVRFirmwareError()
@@ -92,7 +93,7 @@ def setup_openvr():
             applications.setApplicationAutoLaunch(AppManifest["applications"][0]["app_key"], True)
             print("Manifest added successfully")
             # Set the application to start automatically when SteamVR starts
-            
+
         # Listen for the event that SteamVR is shutting down
         # This is a blocking call, so it will wait here until SteamVR shuts down
         #event = openvr.VREvent_t()
@@ -100,9 +101,8 @@ def setup_openvr():
         #    if vr.pollNextEvent(event):
         #        if event.eventType == openvr.VREvent_Quit:
         #            break
-    
     except openvr.error_code.ApplicationError_InvalidManifest as e:
-        print('\x1b[1;31;40m' + f'Error: {e}\nWarning: Was not able to import openvr!' + '\x1b[0m')
+        print(Fore.RED + f'Error: {e}\nWarning: Was not able to import openvr!' + Fore.RESET)
 
 
 def createDefaultConfigFile(configPath): # Creates a default config
@@ -130,20 +130,20 @@ def bootstrap(configPath = "./config.json") -> dict:
         try:
             with open(configPath, "r") as cf:
                 config = json.load(cf)
-            return config  
+            return config
         except Exception as e: #Catch a malformed config file.
-            print('\x1b[1;31;40m' + 'Malformed config file. Loading default values.' + '\x1b[0m')
+            print(Fore.RED + 'Malformed config file. Loading default values.' + Fore.RESET)
             print(e,"was the exception\n")
             time.sleep(2)
             return DefaultConfig
-    
 
-def printInfo(config):       
-    print('\x1b[1;32;40m' + 'OSCLeash is Running!' + '\x1b[0m')
+
+def printInfo(config):
+    print(Fore.GREEN + 'OSCLeash is Running!' + Fore.RESET)
 
     if config['IP'] == "127.0.0.1":
         print("IP: Localhost")
-    else:  
+    else:
         print("IP: Not Localhost? Wack.")
 
     print(f"Listening on port {config['ListeningPort']}\nSending on port {config['SendingPort']}")
@@ -178,7 +178,7 @@ def printInfo(config):
     print("Run Deadzone of {:.0f}".format(config['RunDeadzone']*100)+"% stretch")
     print("Walking Deadzone of {:.0f}".format(config['WalkDeadzone']*100)+"% stretch")
 
-    if config['TurningEnabled']: 
+    if config['TurningEnabled']:
         print(f"Turning is enabled:\n\tMultiplier of {config['TurningMultiplier']}\n\tDeadzone of {config['TurningDeadzone']}\n\tGoal of {config['TurningGoal']*180}°")
     else:
         print("Turning is disabled")
