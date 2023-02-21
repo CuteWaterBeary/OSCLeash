@@ -90,7 +90,7 @@ As with RavenBuilds's take on the OSCLeash, using OSC as an input for movement c
 | DisableParameter      | Parameter that will pause the program                                     | blank     |
 |                       |                                                                           |           |
 
-ᴹᵃⁿ ᵗʰᵉʳᵉ'ˢ ᵃ ˡᵒᵗ ᵒᶠ ˢᵉᵗᵗᶦⁿᵍˢ
+ᴹᵃⁿ ᵗʰᵉʳᵉ'ˢ ᵃ ˡᵒᵗ ᵒᶠ ˢᵉᵗᵗᶦⁿᵍˢ :o
 
 ---------
 
